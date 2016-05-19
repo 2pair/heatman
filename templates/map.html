@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>IPv6 Heatmap</title>
+        
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+        <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+        <link rel="stylesheet" href="../static/css/style.css" />
+        <script src="../static/js/leaflet-heat.js"></script>
+        <script src="../static/js/rest-api.js"></script>
+        <script src="../static/js/conversion-functions.js"></script>
+        <script src="../static/js/heat-functions.js"></script>
+    </head>
+    <body>
+        <div id="container">
+            <h1>IPv6 Heatmap</h1>
+            <div id="map"></div>
+            <img id="footman" src="../static/img/heatman.png">
+            <script type="text/javascript">
+                "use strict";
+                // the map
+                var map = L.map('map');
+                // the rest inerface
+                var rest = new Rest();
+                
+                // event listener to send requests
+                // documentation describes moveend as pertaining only to map center
+                // movement, however it appears to fire on zoom as well, so thats good
+                map.on({
+                    moveend: function() {
+                        var queries = constructQueries();
+                        rest.setQueries(queries);
+                        var uri = rest.constructURI();
+                        rest.sendReceive(uri, updateHeatLayer, L, [heatLayer]);
+                    }                       
+                });
+                
+                // create map layer
+                L.tileLayer(
+                    'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy <a href="http://mapbox.com">Mapbox</a>',
+                    id: 'mapbox.light',
+                    accessToken: 'pk.eyJ1IjoicnRlZHJpY2siLCJhIjoiY2luZHJhdXh1MHg5dHUzbHdwZ3l5enY2aCJ9.kcJZ2FkhkRx7q0Qvl500ew',
+                    maxZoom: 17,
+                    minZoom: 2
+                }).addTo(map);               
+                // create empty heat layer
+                var heatLayer = L.heatLayer([], {max: 0.1}).addTo(map);
+                // set default view 
+                map.setView([0.0, 0.0], 2);
+            </script>
+        </div>
+    </body>
+</html>
